@@ -200,7 +200,7 @@ const TC113_SECURITY =
 // ── All 6 bug cards ────────────────────────────────────────────────────────────
 const CARDS: BugCard[] = [
   {
-    summary:       '[BUG][Login] TC109 - Invalid Email Format Does Not Show Expected Validation Error (Chromium)',
+    summary:       'gokulavarathan.  gfgf.  [BUG][Login] TC109 - Invalid Email Format Does Not Show Expected Validation Error (Chromium)',
     browser:       'Chromium (Chrome 136)',
     tcId:          'TC109',
     priority:      'High',
