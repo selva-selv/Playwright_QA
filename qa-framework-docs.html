@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SnapMeasure QA Framework — Developer Guide</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0f1117;
+      --surface:    #1a1d27;
+      --surface2:   #22263a;
+      --border:     #2e3250;
+      --accent:     #6c63ff;
+      --accent2:    #00d4aa;
+      --pass:       #22c55e;
+      --fail:       #ef4444;
+      --warn:       #f59e0b;
+      --info:       #3b82f6;
+      --text:       #e2e8f0;
+      --text-muted: #8892a4;
+      --code-bg:    #0d1117;
+      --radius:     12px;
+      --radius-sm:  6px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      display: flex;
+    }
+
+    /* ── Sidebar Nav ──────────────────────────────────────────── */
+    .sidebar {
+      width: 260px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0; left: 0;
+      padding: 0 0 40px;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 10px;
+    }
+
+    .sidebar-logo h2 { font-size: 14px; color: var(--text); font-weight: 700; }
+    .sidebar-logo p  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .nav-section { padding: 16px 12px 4px; }
+    .nav-section-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+      color: var(--text-muted); text-transform: uppercase; padding: 0 8px;
+    }
+
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: var(--radius-sm);
+      color: var(--text-muted); text-decoration: none;
+      font-size: 13px; font-weight: 500; margin-top: 2px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .nav-link .icon { font-size: 15px; width: 20px; text-align: center; }
+
+    /* ── Main Content ─────────────────────────────────────────── */
+    .main {
+      margin-left: 260px;
+      flex: 1;
+      padding: 0 40px 80px;
+      max-width: calc(100vw - 260px);
+    }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #1a1d27 0%, #16192b 50%, #1a1d27 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 0 50px;
+      margin: 0 -40px 50px;
+      padding-left: 40px; padding-right: 40px;
+      position: relative; overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3);
+      color: #a78bfa; padding: 5px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: 38px; font-weight: 800; line-height: 1.2;
+      background: linear-gradient(135deg, #ffffff 30%, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 14px;
+    }
+
+    .hero p {
+      font-size: 16px; color: var(--text-muted); max-width: 600px; margin-bottom: 30px;
+    }
+
+    .hero-stats {
+      display: flex; gap: 30px; flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 24px; text-align: center;
+      min-width: 110px;
+    }
+
+    .stat-card .num {
+      font-size: 28px; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-card .label { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 600; }
+
+    /* ── Sections ─────────────────────────────────────────────── */
+    .section { margin-bottom: 60px; }
+
+    .section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 28px; padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+
+    .section-title h2 { font-size: 22px; font-weight: 700; }
+    .section-title p  { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Cards ────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .card + .card { margin-top: 16px; }
+
+    .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+
+    /* ── Grid ─────────────────────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+    /* ── Code Block ───────────────────────────────────────────── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 12.5px; line-height: 1.8;
+      overflow-x: auto; color: #cdd6f4;
+      white-space: pre;
+    }
+
+    .code-label {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-bottom: none; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      padding: 8px 16px; font-size: 11px; color: var(--text-muted);
+      font-family: monospace; display: flex; align-items: center; gap: 8px;
+    }
+
+    .code-label .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+
+    .code-label .dot-r { background: #ff5f57; }
+    .code-label .dot-y { background: #febc2e; }
+    .code-label .dot-g { background: #28c840; }
+
+    code {
+      background: rgba(108,99,255,0.15); color: #c4b5fd;
+      padding: 2px 7px; border-radius: 4px; font-size: 12px;
+      font-family: monospace;
+    }
+
+    /* ── Table ────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead tr {
+      background: var(--surface2);
+    }
+
+    th {
+      padding: 13px 16px; text-align: left;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+      text-transform: uppercase; color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px 16px; font-size: 13px;
+      border-bottom: 1px solid rgba(46,50,80,0.5);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── Badges ───────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+
+    .badge-pass   { background: rgba(34,197,94,0.15);  color: var(--pass); }
+    .badge-fail   { background: rgba(239,68,68,0.15);  color: var(--fail); }
+    .badge-warn   { background: rgba(245,158,11,0.15); color: var(--warn); }
+    .badge-info   { background: rgba(59,130,246,0.15); color: var(--info); }
+    .badge-purple { background: rgba(108,99,255,0.15); color: #a78bfa; }
+    .badge-teal   { background: rgba(0,212,170,0.15);  color: var(--accent2); }
+
+    /* ── Flow Diagram ─────────────────────────────────────────── */
+    .flow {
+      display: flex; flex-direction: column; gap: 0;
+    }
+
+    .flow-row {
+      display: flex; align-items: stretch; gap: 0;
+    }
+
+    .flow-box {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px;
+      flex: 1; position: relative;
+    }
+
+    .flow-box h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .flow-box p  { font-size: 12px; color: var(--text-muted); }
+
+    .flow-arrow {
+      display: flex; align-items: center; justify-content: center;
+      width: 40px; font-size: 20px; color: var(--accent); flex-shrink: 0;
+    }
+
+    .flow-arrow-down {
+      text-align: center; font-size: 22px; color: var(--accent);
+      padding: 6px 0;
+    }
+
+    /* ── File Tree ────────────────────────────────────────────── */
+    .file-tree {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      font-family: monospace; font-size: 13px; line-height: 2;
+    }
+
+    .tree-dir   { color: #7dd3fc; font-weight: 700; }
+    .tree-file  { color: #cdd6f4; }
+    .tree-desc  { color: #6272a4; font-size: 11px; }
+    .tree-line  { color: #44475a; }
+
+    /* ── Step List ────────────────────────────────────────────── */
+    .steps-list { counter-reset: steps; list-style: none; }
+
+    .steps-list li {
+      counter-increment: steps;
+      display: flex; gap: 16px; margin-bottom: 16px;
+      align-items: flex-start;
+    }
+
+    .steps-list li::before {
+      content: counter(steps);
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; width: 28px; height: 28px;
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 800;
+      flex-shrink: 0; margin-top: 2px;
+    }
+
+    .steps-list li .step-content { flex: 1; }
+    .steps-list li .step-content strong { display: block; font-size: 14px; margin-bottom: 4px; }
+    .steps-list li .step-content span  { font-size: 13px; color: var(--text-muted); }
+
+    /* ── Rule Box ─────────────────────────────────────────────── */
+    .rule-box {
+      border: 1px solid;
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 12px;
+      display: flex; gap: 16px; align-items: flex-start;
+    }
+
+    .rule-box.pass { border-color: rgba(34,197,94,0.3);  background: rgba(34,197,94,0.05); }
+    .rule-box.fail { border-color: rgba(239,68,68,0.3);  background: rgba(239,68,68,0.05); }
+    .rule-box.warn { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+    .rule-box.info { border-color: rgba(108,99,255,0.3); background: rgba(108,99,255,0.05); }
+
+    .rule-box .rule-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .rule-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .rule-box p  { font-size: 13px; color: var(--text-muted); }
+
+    /* ── Module Card ──────────────────────────────────────────── */
+    .module-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .module-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .module-header .mod-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .module-header h3 { font-size: 14px; font-weight: 700; }
+    .module-header p  { font-size: 11px; color: var(--text-muted); }
+
+    /* ── Tech Stack ───────────────────────────────────────────── */
+    .tech-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .tech-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .tech-card .tech-icon { font-size: 28px; }
+    .tech-card h4 { font-size: 14px; font-weight: 700; }
+    .tech-card p  { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Browser Badges ───────────────────────────────────────── */
+    .browser-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+
+    .browser-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 8px 14px;
+      font-size: 13px; font-weight: 600;
+    }
+
+    /* ── Highlight ────────────────────────────────────────────── */
+    .highlight-accent { color: var(--accent); font-weight: 700; }
+    .highlight-pass   { color: var(--pass); font-weight: 700; }
+    .highlight-fail   { color: var(--fail); font-weight: 700; }
+    .highlight-warn   { color: var(--warn); font-weight: 700; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      margin: 60px -40px 0;
+      padding: 30px 40px;
+      display: flex; justify-content: space-between; align-items: center;
+      color: var(--text-muted); font-size: 13px;
+    }
+
+    .footer strong { color: var(--text); }
+
+    /* ── Scrollbar ────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; max-width: 100%; padding: 0 20px 60px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ──────────────────────────────────────────────────── -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🧪</div>
+    <h2>SnapMeasure QA</h2>
+    <p>Playwright Framework Docs</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-link active" href="#overview"><span class="icon">🏠</span>Introduction</a>
+    <a class="nav-link" href="#structure"><span class="icon">📁</span>Folder Structure</a>
+    <a class="nav-link" href="#architecture"><span class="icon">🏗</span>Architecture</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Core Concepts</div>
+    <a class="nav-link" href="#pom"><span class="icon">📄</span>Page Object Model</a>
+    <a class="nav-link" href="#testdata"><span class="icon">🗄</span>Test Data</a>
+    <a class="nav-link" href="#testcases"><span class="icon">✅</span>Test Cases</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Integrations</div>
+    <a class="nav-link" href="#jira"><span class="icon">🐛</span>Jira Integration</a>
+    <a class="nav-link" href="#reporter"><span class="icon">📊</span>Custom Reporter</a>
+    <a class="nav-link" href="#browsers"><span class="icon">🌐</span>Browser Coverage</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Developer Guide</div>
+    <a class="nav-link" href="#commands"><span class="icon">⚡</span>Run Commands</a>
+    <a class="nav-link" href="#whenfails"><span class="icon">❌</span>When Test Fails</a>
+    <a class="nav-link" href="#rules"><span class="icon">📋</span>Rules</a>
+    <a class="nav-link" href="#cards"><span class="icon">🎫</span>Jira Cards</a>
+    <a class="nav-link" href="#stack"><span class="icon">⚙️</span>Tech Stack</a>
+  </div>
+</nav>
+
+<!-- ── Main ─────────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Hero -->
+  <div class="hero" id="overview">
+    <div class="hero-badge">🧪 QA Automation Framework</div>
+    <h1>SnapMeasure QA<br>Developer Guide</h1>
+    <p>End-to-end Playwright + TypeScript automation framework with full Jira integration. Auto-creates bug cards on failure, posts test run summaries, covers 3 browsers.</p>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <div class="num">54</div>
+        <div class="label">Total Tests</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">3</div>
+        <div class="label">Browsers</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">18</div>
+        <div class="label">Test Cases</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">100%</div>
+        <div class="label">Pass Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">Auto</div>
+        <div class="label">Jira Bugs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Folder Structure -->
+  <section class="section" id="structure">
+    <div class="section-header">
+      <div class="section-icon">📁</div>
+      <div class="section-title">
+        <h2>Folder Structure</h2>
+        <p>Every file and what it does</p>
+      </div>
+    </div>
+
+    <div class="file-tree">
+<span class="tree-dir">my-qa-framework/</span>
+<span class="tree-line">│</span>
+<span class="tree-line">├── </span><span class="tree-dir">tests/</span>                         <span class="tree-desc">← All test spec files</span>
+<span class="tree-line">│   ├── </span><span class="tree-file">form.spec.ts</span>               <span class="tree-desc">← Login: positive + negative tests (TC101–TC113)</span>
+<span class="tree-line">│   ├── </span><span class="tree-file">dashboard.spec.ts</span>          <span class="tree-desc">← Dashboard UI tests (TC104–TC107)</span>
+<span class="tree-line">│   ├── </span><span class="tree-file">e2e.spec.ts</span>                <span class="tree-desc">← Full user journey tests (TC120–TC124)</span>
+<span class="tree-line">│   └── </span><span class="tree-file">fixtures.ts</span>                <span class="tree-desc">← Shared setup: Jira bug hook on failure</span>
+<span class="tree-line">│</span>
+<span class="tree-line">├── </span><span class="tree-dir">pages/</span>                         <span class="tree-desc">← Page Object Model (POM) classes</span>
+<span class="tree-line">│   ├── </span><span class="tree-file">BasePage.ts</span>                <span class="tree-desc">← Parent: goto(), waitForPageLoad()</span>
+<span class="tree-line">│   ├── </span><span class="tree-file">LoginPage.ts</span>               <span class="tree-desc">← Login actions: navigate, login, expectError</span>
+<span class="tree-line">│   └── </span><span class="tree-file">DashboardPage.ts</span>           <span class="tree-desc">← Dashboard: navbar, sidebar, navigation</span>
+<span class="tree-line">│</span>
+<span class="tree-line">├── </span><span class="tree-dir">data/</span>                          <span class="tree-desc">← Test input data</span>
+<span class="tree-line">│   └── </span><span class="tree-file">testData.ts</span>                <span class="tree-desc">← Reads from .env — validUser, negativeUsers</span>
+<span class="tree-line">│</span>
+<span class="tree-line">├── </span><span class="tree-dir">utils/</span>                         <span class="tree-desc">← Helper utilities</span>
+<span class="tree-line">│   ├── </span><span class="tree-file">jiraHelper.ts</span>              <span class="tree-desc">← Jira REST API: create bugs, summaries</span>
+<span class="tree-line">│   └── </span><span class="tree-file">jiraReporter.ts</span>            <span class="tree-desc">← Custom Playwright reporter</span>
+<span class="tree-line">│</span>
+<span class="tree-line">├── </span><span class="tree-dir">scripts/</span>                       <span class="tree-desc">← One-time utility scripts</span>
+<span class="tree-line">│   └── </span><span class="tree-file">createBugCards.ts</span>          <span class="tree-desc">← Manually post historical bug cards to Jira</span>
+<span class="tree-line">│</span>
+<span class="tree-line">├── </span><span class="tree-file">playwright.config.ts</span>           <span class="tree-desc">← Config: baseURL, browsers, reporters, screenshot</span>
+<span class="tree-line">├── </span><span class="tree-file">.env</span>                           <span class="tree-desc">← Secrets: Jira credentials, test logins (gitignored)</span>
+<span class="tree-line">├── </span><span class="tree-file">tsconfig.json</span>                  <span class="tree-desc">← TypeScript: Node16, strict, skipLibCheck</span>
+<span class="tree-line">└── </span><span class="tree-file">package.json</span>                   <span class="tree-desc">← Dependencies + npm scripts</span>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section class="section" id="architecture">
+    <div class="section-header">
+      <div class="section-icon">🏗</div>
+      <div class="section-title">
+        <h2>End-to-End Architecture</h2>
+        <p>How every piece connects from test run to Jira</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; flex-direction:column; gap:8px;">
+
+        <!-- Row 1 -->
+        <div style="text-align:center;">
+          <div style="display:inline-block; background:linear-gradient(135deg,#6c63ff,#00d4aa); padding:14px 32px; border-radius:10px; font-weight:700; font-size:15px;">
+            npx playwright test
+          </div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+
+        <!-- Row 2 -->
+        <div style="display:grid; grid-template-columns:1fr 40px 1fr; gap:0; align-items:center;">
+          <div class="flow-box">
+            <h4>📄 playwright.config.ts</h4>
+            <p>Sets baseURL, attaches 3 browsers, registers reporters, enables screenshot on failure</p>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box">
+            <h4>🧪 tests/*.spec.ts</h4>
+            <p>form.spec (TC101–113) · dashboard.spec (TC104–107) · e2e.spec (TC120–124)</p>
+          </div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+
+        <!-- Row 3 -->
+        <div style="display:grid; grid-template-columns:1fr 40px 1fr; gap:0; align-items:center;">
+          <div class="flow-box">
+            <h4>📐 pages/ (POM)</h4>
+            <p>BasePage → LoginPage, DashboardPage. Selectors and actions live here, not in tests</p>
+          </div>
+          <div class="flow-arrow">+</div>
+          <div class="flow-box">
+            <h4>🗄 data/testData.ts</h4>
+            <p>validUser, invalidUser, negativeUsers. All read from .env secrets</p>
+          </div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+
+        <!-- Row 4 -->
+        <div style="display:grid; grid-template-columns:1fr 40px 1fr; gap:0; align-items:center;">
+          <div class="flow-box" style="border-color:rgba(239,68,68,0.4);">
+            <h4>❌ Test FAILS?</h4>
+            <p>fixtures.ts <code>afterEach</code> fires → calls <code>createJiraBug()</code> in jiraHelper.ts → Bug card posted to Jira KAN</p>
+          </div>
+          <div class="flow-arrow" style="color:#22c55e;">|</div>
+          <div class="flow-box" style="border-color:rgba(34,197,94,0.4);">
+            <h4>✅ Test PASSES?</h4>
+            <p>Nothing happens. Strict rule: NO Jira card for passing tests. Ever.</p>
+          </div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+
+        <!-- Row 5 -->
+        <div class="flow-box" style="border-color:rgba(108,99,255,0.4); text-align:center;">
+          <h4>📊 jiraReporter.ts — After ALL tests finish</h4>
+          <p>Collects all results → Prints summary table to terminal → Calls <code>createTestRunSummary()</code> → Posts 1 Jira Task with full report + developer message</p>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+
+        <!-- Row 6 -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="flow-box" style="border-color:rgba(245,158,11,0.4); text-align:center;">
+            <h4>🐛 Jira Bug Cards</h4>
+            <p>KAN-9 to KAN-14<br>One per failed test per browser</p>
+          </div>
+          <div class="flow-box" style="border-color:rgba(59,130,246,0.4); text-align:center;">
+            <h4>📋 Jira Task Card</h4>
+            <p>KAN-8<br>Full run summary with developer message</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- POM -->
+  <section class="section" id="pom">
+    <div class="section-header">
+      <div class="section-icon">📄</div>
+      <div class="section-title">
+        <h2>Page Object Model</h2>
+        <p>How pages are structured — change selector once, fix everywhere</p>
+      </div>
+    </div>
+
+    <div class="rule-box info">
+      <div class="rule-icon">💡</div>
+      <div>
+        <h4>Why POM?</h4>
+        <p>If the app changes a button label or selector, you update it in ONE page class — not in every test file. Tests read like plain English. Selectors are never repeated.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div class="grid-2" style="gap:20px;">
+
+        <div class="module-card">
+          <div class="module-header">
+            <div class="mod-icon" style="background:rgba(59,130,246,0.15);">🏛</div>
+            <div><h3>BasePage.ts</h3><p>Parent class — inherited by all pages</p></div>
+          </div>
+          <div style="padding:16px 20px;">
+            <div class="code-label"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span> BasePage.ts</div>
+            <pre>class BasePage {
+  goto(path)         → navigate to URL
+  waitForPageLoad()  → wait for 'load' state
+}</pre>
+          </div>
+        </div>
+
+        <div class="module-card">
+          <div class="module-header">
+            <div class="mod-icon" style="background:rgba(108,99,255,0.15);">🔐</div>
+            <div><h3>LoginPage.ts</h3><p>Extends BasePage — all login actions</p></div>
+          </div>
+          <div style="padding:16px 20px;">
+            <div class="code-label"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span> LoginPage.ts</div>
+            <pre>navigate()             → go to /login
+login(id, email, pass) → fill + click
+submitForm()           → click without fill
+expectLoginError()     → assert error visible
+expectLoginSuccess()   → assert URL ≠ /login</pre>
+          </div>
+        </div>
+
+        <div class="module-card" style="grid-column: 1 / -1;">
+          <div class="module-header">
+            <div class="mod-icon" style="background:rgba(0,212,170,0.15);">📊</div>
+            <div><h3>DashboardPage.ts</h3><p>Extends BasePage — all dashboard actions</p></div>
+          </div>
+          <div style="padding:16px 20px;">
+            <div class="code-label"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span> DashboardPage.ts</div>
+            <pre>expectDashboardVisible()      → confirms not on /login
+expectNavbarVisible()         → checks .v-avatar in top bar
+expectSidebarVisible()        → checks "Enterprise" text visible
+clickSidebarItem(name)        → clicks sidebar menu item
+getSidebarItems()             → returns list of visible items
+navigateToSection(name)       → click item + wait for load
+expectSectionLoaded(name)     → confirm section visible + not /login</pre>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Test Data -->
+  <section class="section" id="testdata">
+    <div class="section-header">
+      <div class="section-icon">🗄</div>
+      <div class="section-title">
+        <h2>Test Data</h2>
+        <p>All credentials read from .env — never hardcoded in tests</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="gap:20px;">
+      <div class="card">
+        <h3>🔒 .env file (secret — gitignored)</h3>
+        <div class="code-label"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span> .env</div>
+        <pre>TEST_ENTERPRISE_ID=8253714198
+TEST_EMAIL=superadmin@magicktech.com
+TEST_PASSWORD=12345678
+TEST_INVALID_EMAIL=wrong@example.com
+TEST_INVALID_PASSWORD=wrongpassword
+
+JIRA_BASE_URL=https://selva-ragavan.atlassian.net
+JIRA_EMAIL=selvaragavan1706@gmail.com
+JIRA_API_TOKEN=***
+JIRA_PROJECT_KEY=KAN
+JIRA_DEVELOPER_NAME=Developer</pre>
+      </div>
+
+      <div class="card">
+        <h3>📦 testData.ts — exported objects</h3>
+        <div class="code-label"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span> data/testData.ts</div>
+        <pre>validUser          → TC101, TC104–107, TC120–124
+  enterpriseId, email, password (from .env)
+
+invalidUser        → TC102
+  enterpriseId, wrong email, wrong password
+
+negativeUsers      → TC108–TC113
+  wrongPassword     → valid user, wrong pass
+  invalidEmailFormat → "not-a-valid-email"
+  wrongEnterpriseId  → "0000000000"
+  emptyEmail         → ""
+  emptyPassword      → ""
+  sqlInjection       → "' OR '1'='1"</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test Cases -->
+  <section class="section" id="testcases">
+    <div class="section-header">
+      <div class="section-icon">✅</div>
+      <div class="section-title">
+        <h2>All Test Cases</h2>
+        <p>18 test cases × 3 browsers = 54 total runs</p>
+      </div>
+    </div>
+
+    <!-- Login Module -->
+    <div class="module-card" style="margin-bottom:20px;">
+      <div class="module-header">
+        <div class="mod-icon" style="background:rgba(108,99,255,0.2);">🔐</div>
+        <div>
+          <h3>Login Module — form.spec.ts</h3>
+          <p>9 test cases: 3 positive + 6 negative/security</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>TC ID</th><th>Type</th><th>What It Tests</th><th>Input Used</th><th>Expected</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>TC101</code></td>
+              <td><span class="badge badge-pass">Positive</span></td>
+              <td>Valid credentials login</td>
+              <td>validUser</td>
+              <td>Redirects away from /login</td>
+            </tr>
+            <tr>
+              <td><code>TC102</code></td>
+              <td><span class="badge badge-info">Positive</span></td>
+              <td>Invalid credentials show error</td>
+              <td>invalidUser</td>
+              <td>Error message visible</td>
+            </tr>
+            <tr>
+              <td><code>TC103</code></td>
+              <td><span class="badge badge-info">Positive</span></td>
+              <td>Empty form submit shows validation</td>
+              <td>Empty fields</td>
+              <td>Validation message visible</td>
+            </tr>
+            <tr>
+              <td><code>TC108</code></td>
+              <td><span class="badge badge-warn">Negative</span></td>
+              <td>Wrong password with valid email + ID</td>
+              <td>negativeUsers.wrongPassword</td>
+              <td>Error message visible</td>
+            </tr>
+            <tr>
+              <td><code>TC109</code></td>
+              <td><span class="badge badge-warn">Negative</span></td>
+              <td>Invalid email format</td>
+              <td>"not-a-valid-email"</td>
+              <td>"The Email field must be a valid email"</td>
+            </tr>
+            <tr>
+              <td><code>TC110</code></td>
+              <td><span class="badge badge-warn">Negative</span></td>
+              <td>Wrong Enterprise ID</td>
+              <td>"0000000000"</td>
+              <td>Error message visible</td>
+            </tr>
+            <tr>
+              <td><code>TC111</code></td>
+              <td><span class="badge badge-warn">Negative</span></td>
+              <td>Empty email field</td>
+              <td>email: ""</td>
+              <td>Validation message visible</td>
+            </tr>
+            <tr>
+              <td><code>TC112</code></td>
+              <td><span class="badge badge-warn">Negative</span></td>
+              <td>Empty password field</td>
+              <td>password: ""</td>
+              <td>Validation message visible</td>
+            </tr>
+            <tr>
+              <td><code>TC113</code></td>
+              <td><span class="badge badge-fail">Security</span></td>
+              <td>SQL injection payload rejected</td>
+              <td>"' OR '1'='1"</td>
+              <td>App rejects — no unauthorized access</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Dashboard Module -->
+    <div class="module-card" style="margin-bottom:20px;">
+      <div class="module-header">
+        <div class="mod-icon" style="background:rgba(0,212,170,0.2);">📊</div>
+        <div>
+          <h3>Dashboard Module — dashboard.spec.ts</h3>
+          <p>4 test cases — all require login first (beforeEach)</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>TC ID</th><th>What It Tests</th><th>Assertion</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>TC104</code></td><td>Dashboard loads after login</td><td>URL is not /login, page loaded</td></tr>
+            <tr><td><code>TC105</code></td><td>Navbar visible on dashboard</td><td>.v-avatar visible in top bar</td></tr>
+            <tr><td><code>TC106</code></td><td>Sidebar visible on dashboard</td><td>"Enterprise" text visible</td></tr>
+            <tr><td><code>TC107</code></td><td>Sidebar contains navigation items</td><td>getSidebarItems().length > 0</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- E2E Module -->
+    <div class="module-card">
+      <div class="module-header">
+        <div class="mod-icon" style="background:rgba(245,158,11,0.2);">🚀</div>
+        <div>
+          <h3>End-to-End Module — e2e.spec.ts</h3>
+          <p>5 full user journey tests — login + navigate + verify</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>TC ID</th><th>Full Journey</th><th>What Is Verified</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>TC120</code></td><td>Login → Dashboard</td><td>Sidebar + Navbar both visible together</td></tr>
+            <tr><td><code>TC121</code></td><td>Login → Enterprise</td><td>Sidebar click → Enterprise section loads</td></tr>
+            <tr><td><code>TC122</code></td><td>Login → User</td><td>Sidebar click → User section loads</td></tr>
+            <tr><td><code>TC123</code></td><td>Login → Project</td><td>Sidebar click → Project section loads</td></tr>
+            <tr><td><code>TC124</code></td><td>Login → Customer</td><td>Sidebar click → Customer section loads</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Jira Integration -->
+  <section class="section" id="jira">
+    <div class="section-header">
+      <div class="section-icon">🐛</div>
+      <div class="section-title">
+        <h2>Jira Integration</h2>
+        <p>How bugs get created automatically — zero manual work</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+      <div class="rule-box fail">
+        <div class="rule-icon">❌</div>
+        <div>
+          <h4>FAILED Test → Jira Bug Card</h4>
+          <p>Automatically creates a Bug in project KAN. Checks for duplicates first. Includes: environment, steps, expected, actual, error, screenshot path, severity, labels.</p>
+        </div>
+      </div>
+      <div class="rule-box pass">
+        <div class="rule-icon">✅</div>
+        <div>
+          <h4>PASSED Test → Nothing</h4>
+          <p>Strict rule enforced in fixtures.ts. A passing test NEVER creates any Jira card. The afterEach hook only runs createJiraBug() inside an <code>if (status === 'failed')</code> block.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Bug Card Auto-Creation Flow</h3>
+      <div class="code-label"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span> fixtures.ts → jiraHelper.ts</div>
+      <pre><span style="color:#6272a4;">// fixtures.ts — afterEach hook</span>
+test.afterEach(async ({}, testInfo) => {
+  if (testInfo.status === <span style="color:#f1fa8c;">'failed'</span>) {
+    <span style="color:#8be9fd;">await createJiraBug(</span>
+      testInfo.title,                    <span style="color:#6272a4;">// "TC109 - invalid email..."</span>
+      testInfo.error?.message,           <span style="color:#6272a4;">// exact Playwright error</span>
+      testInfo.project.name,             <span style="color:#6272a4;">// "chromium" | "firefox" | "webkit"</span>
+      screenshotPath                     <span style="color:#6272a4;">// path to screenshot file</span>
+    <span style="color:#8be9fd;">);</span>
+  }
+  <span style="color:#6272a4;">// PASSED → STRICT RULE: DO NOT create any Jira card</span>
+});</pre>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>What Each Bug Card Contains</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Field</th><th>Value</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Summary</td><td><code>[BUG] TC109 - invalid email format shows error</code></td></tr>
+            <tr><td>Issue Type</td><td>Bug</td></tr>
+            <tr><td>Priority</td><td>High (Highest for security tests)</td></tr>
+            <tr><td>Labels</td><td><code>playwright-automation</code> · <code>regression</code> · <code>chromium</code> · <code>TC109</code></td></tr>
+            <tr><td>Description</td><td>Environment · Steps to Reproduce · Expected · Actual · Playwright Error · Screenshot path</td></tr>
+            <tr><td>Duplicate Check</td><td>JQL search before creating — skips if same bug already open</td></tr>
+            <tr><td>Assignee</td><td>Set via <code>JIRA_ASSIGNEE_ID</code> in .env</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Custom Reporter -->
+  <section class="section" id="reporter">
+    <div class="section-header">
+      <div class="section-icon">📊</div>
+      <div class="section-title">
+        <h2>Custom Jira Reporter</h2>
+        <p>What runs after all 54 tests finish</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Terminal Output — Summary Table</h3>
+      <div class="code-label"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span> Terminal</div>
+      <pre><span style="color:#8be9fd;">════════════════════════════════════════════════════</span>
+  QA TEST RUN SUMMARY
+<span style="color:#8be9fd;">════════════════════════════════════════════════════</span>
+  TEST NAME                    STATUS      BROWSER    JIRA CARD
+<span style="color:#6272a4;">────────────────────────────────────────────────────</span>
+  TC101 - valid credentials    <span style="color:#50fa7b;">✅ PASSED</span>   chromium   No card created
+  TC102 - invalid credentials  <span style="color:#50fa7b;">✅ PASSED</span>   chromium   No card created
+  TC109 - invalid email        <span style="color:#ff5555;">❌ FAILED</span>   chromium   KAN-9
+<span style="color:#6272a4;">────────────────────────────────────────────────────</span>
+  <span style="color:#50fa7b;">✅ Passed: 48</span>   <span style="color:#ff5555;">❌ Failed: 6</span>   Total: 54
+<span style="color:#8be9fd;">════════════════════════════════════════════════════</span>
+
+💬 DEVELOPER MESSAGE:
+Hi Developer, please find the QA automation report below.
+
+<span style="color:#ff5555;">❌ FAILED TESTS — ACTION REQUIRED:</span>
+  • TC109 - invalid email format shows error [KAN-9] (chromium)
+    Error: expect(locator).toBeVisible() failed
+
+<span style="color:#50fa7b;">✅ PASSED TESTS — No action needed:</span>
+  • TC101 - valid credentials redirect away from login (chromium)
+  • TC104 - dashboard loads after login (chromium)
+  ...
+
+📋 Jira Test Run Summary: https://selva-ragavan.atlassian.net/browse/KAN-8</pre>
+    </div>
+  </section>
+
+  <!-- Browser Coverage -->
+  <section class="section" id="browsers">
+    <div class="section-header">
+      <div class="section-icon">🌐</div>
+      <div class="section-title">
+        <h2>Browser Coverage</h2>
+        <p>Every test runs on all 3 browsers simultaneously</p>
+      </div>
+    </div>
+
+    <div class="grid-3" style="gap:16px;">
+      <div class="card" style="text-align:center; padding:30px;">
+        <div style="font-size:48px; margin-bottom:12px;">🔵</div>
+        <h3>Chromium</h3>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:8px;">Google Chrome 136<br>Desktop viewport</p>
+        <div style="margin-top:16px;"><span class="badge badge-pass">18 tests</span></div>
+      </div>
+      <div class="card" style="text-align:center; padding:30px;">
+        <div style="font-size:48px; margin-bottom:12px;">🦊</div>
+        <h3>Firefox</h3>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:8px;">Mozilla Firefox (latest)<br>Desktop viewport</p>
+        <div style="margin-top:16px;"><span class="badge badge-pass">18 tests</span></div>
+      </div>
+      <div class="card" style="text-align:center; padding:30px;">
+        <div style="font-size:48px; margin-bottom:12px;">🍎</div>
+        <h3>WebKit</h3>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:8px;">Apple Safari<br>Desktop viewport</p>
+        <div style="margin-top:16px;"><span class="badge badge-pass">18 tests</span></div>
+      </div>
+    </div>
+
+    <div class="rule-box info" style="margin-top:20px;">
+      <div class="rule-icon">💡</div>
+      <div>
+        <h4>Why 3 browsers?</h4>
+        <p>The same UI bug may appear only in Safari or only in Firefox. By running all 3, we catch cross-browser issues automatically. If TC109 fails in Firefox but passes in Chrome — a separate Jira card is created for Firefox.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Run Commands -->
+  <section class="section" id="commands">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div class="section-title">
+        <h2>Run Commands</h2>
+        <p>Everything you need to execute tests</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="gap:16px;">
+      <div class="card">
+        <h3>🚀 Basic Commands</h3>
+        <div class="code-label"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span> Terminal</div>
+        <pre><span style="color:#6272a4;"># Run all 54 tests (3 browsers)</span>
+npm test
+
+<span style="color:#6272a4;"># Run and see the browser</span>
+npm run test:headed
+
+<span style="color:#6272a4;"># Open interactive UI mode</span>
+npm run test:ui
+
+<span style="color:#6272a4;"># Open last HTML report</span>
+npm run test:report</pre>
+      </div>
+
+      <div class="card">
+        <h3>🎯 Targeted Commands</h3>
+        <div class="code-label"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span> Terminal</div>
+        <pre><span style="color:#6272a4;"># Run only Chromium</span>
+npm run test:chromium
+
+<span style="color:#6272a4;"># Run one specific test by ID</span>
+npx playwright test --grep "TC109"
+
+<span style="color:#6272a4;"># Run one spec file</span>
+npx playwright test tests/form.spec.ts
+
+<span style="color:#6272a4;"># Debug step-by-step</span>
+npm run test:debug</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- When Test Fails -->
+  <section class="section" id="whenfails">
+    <div class="section-header">
+      <div class="section-icon">❌</div>
+      <div class="section-title">
+        <h2>When a Test Fails — Full Flow</h2>
+        <p>What happens automatically from failure to Jira</p>
+      </div>
+    </div>
+
+    <ol class="steps-list">
+      <li>
+        <div class="step-content">
+          <strong>Test Execution Fails</strong>
+          <span>Playwright assertion throws — e.g. <code>expect(locator).toBeVisible()</code> fails after 15 second timeout. Test is marked FAILED.</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-content">
+          <strong>Screenshot Captured Automatically</strong>
+          <span>Playwright saves a screenshot to <code>test-results/&lt;test-name&gt;/test-failed-1.png</code>. Configured via <code>screenshot: 'only-on-failure'</code> in playwright.config.ts.</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-content">
+          <strong>fixtures.ts afterEach Hook Triggers</strong>
+          <span>The <code>afterEach</code> hook checks <code>testInfo.status === 'failed'</code> — if true, calls <code>createJiraBug()</code> with test name, error message, browser and screenshot path.</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-content">
+          <strong>Duplicate Check in Jira</strong>
+          <span><code>findOpenBug()</code> runs a JQL query: <code>summary ~ "[BUG] TC109..." AND issuetype = Bug AND statusCategory != Done</code>. If a card already exists — skip. Prevents duplicates.</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-content">
+          <strong>Jira Bug Card Created via REST API</strong>
+          <span>POST to <code>/rest/api/3/issue</code> with full ADF description: environment, steps, expected, actual result, exact Playwright error, screenshot path, labels, priority.</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-content">
+          <strong>All Tests Complete — Reporter Fires</strong>
+          <span><code>jiraReporter.ts onEnd()</code> runs. Prints the full summary table and developer message to terminal. Then calls <code>createTestRunSummary()</code>.</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-content">
+          <strong>Jira Task Created with Full Report</strong>
+          <span>One Jira Task card posted to KAN containing the full results table, pass/fail counts, developer message listing every failed test with its error and Jira bug key.</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-content">
+          <strong>Developer Receives the Jira Bug Card</strong>
+          <span>Developer opens the card, reads steps to reproduce, actual vs expected, and the exact Playwright error. Fixes the bug, comments on the card, replies "Fixed in commit #xxx".</span>
+        </div>
+      </li>
+      <li>
+        <div class="step-content">
+          <strong>QA Re-Runs Tests to Confirm Fix</strong>
+          <span>After the developer fix is deployed, QA runs <code>npx playwright test --grep "TC109"</code>. If it passes on all 3 browsers, the Jira card is closed.</span>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- Rules -->
+  <section class="section" id="rules">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div class="section-title">
+        <h2>Strict Rules for the Team</h2>
+        <p>Must follow — enforced in code</p>
+      </div>
+    </div>
+
+    <div class="rule-box fail">
+      <div class="rule-icon">🚫</div>
+      <div>
+        <h4>RULE 1 — PASSED = NO Jira card. Ever.</h4>
+        <p>If a test passes, nothing is posted to Jira. No summary, no card, nothing. The afterEach hook is gated strictly on <code>status === 'failed'</code>.</p>
+      </div>
+    </div>
+    <div class="rule-box warn">
+      <div class="rule-icon">🐛</div>
+      <div>
+        <h4>RULE 2 — FAILED = One Bug card per test per browser</h4>
+        <p>TC109 on Chromium = KAN-9. TC109 on Firefox = KAN-10. TC109 on WebKit = KAN-11. Three separate cards. Three separate bug IDs. Never merged.</p>
+      </div>
+    </div>
+    <div class="rule-box info">
+      <div class="rule-icon">🔍</div>
+      <div>
+        <h4>RULE 3 — No duplicates</h4>
+        <p>Before every bug creation, a JQL search checks if the same bug is already open. If yes — it is skipped. Re-running tests does not flood Jira with duplicate cards.</p>
+      </div>
+    </div>
+    <div class="rule-box pass">
+      <div class="rule-icon">✅</div>
+      <div>
+        <h4>RULE 4 — Fix ONLY the FAILED items</h4>
+        <p>The developer message in Jira clearly separates FAILED (action required) from PASSED (no action needed). Developers should touch only what is listed under FAILED.</p>
+      </div>
+    </div>
+    <div class="rule-box info">
+      <div class="rule-icon">🔒</div>
+      <div>
+        <h4>RULE 5 — Never commit .env</h4>
+        <p>The .env file is in .gitignore. It contains real passwords and Jira API tokens. Never push it to Git. Use environment variables in CI/CD pipelines.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Jira Cards -->
+  <section class="section" id="cards">
+    <div class="section-header">
+      <div class="section-icon">🎫</div>
+      <div class="section-title">
+        <h2>Current Jira Cards — Project KAN</h2>
+        <p>All cards created by this framework so far</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Card</th><th>Type</th><th>TC ID</th><th>Browser</th><th>Description</th><th>Priority</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>KAN-8</code></td>
+            <td><span class="badge badge-info">Task</span></td>
+            <td>—</td>
+            <td>All</td>
+            <td>Test Run Summary — 54/54 Passed</td>
+            <td><span class="badge badge-teal">Low</span></td>
+            <td><span class="badge badge-pass">Open</span></td>
+          </tr>
+          <tr>
+            <td><code>KAN-9</code></td>
+            <td><span class="badge badge-fail">Bug</span></td>
+            <td>TC109</td>
+            <td>Chromium</td>
+            <td>Invalid Email Format — Validation Error Not Matched</td>
+            <td><span class="badge badge-warn">High</span></td>
+            <td><span class="badge badge-warn">Open</span></td>
+          </tr>
+          <tr>
+            <td><code>KAN-10</code></td>
+            <td><span class="badge badge-fail">Bug</span></td>
+            <td>TC109</td>
+            <td>Firefox</td>
+            <td>Invalid Email Format — Validation Error Not Matched</td>
+            <td><span class="badge badge-warn">High</span></td>
+            <td><span class="badge badge-warn">Open</span></td>
+          </tr>
+          <tr>
+            <td><code>KAN-11</code></td>
+            <td><span class="badge badge-fail">Bug</span></td>
+            <td>TC109</td>
+            <td>WebKit</td>
+            <td>Invalid Email Format — Validation Error Not Matched</td>
+            <td><span class="badge badge-warn">High</span></td>
+            <td><span class="badge badge-warn">Open</span></td>
+          </tr>
+          <tr>
+            <td><code>KAN-12</code></td>
+            <td><span class="badge badge-fail">Bug</span></td>
+            <td>TC113</td>
+            <td>Chromium</td>
+            <td>SQL Injection — Error Assertion Not Triggered</td>
+            <td><span class="badge badge-fail">Highest</span></td>
+            <td><span class="badge badge-warn">Open</span></td>
+          </tr>
+          <tr>
+            <td><code>KAN-13</code></td>
+            <td><span class="badge badge-fail">Bug</span></td>
+            <td>TC113</td>
+            <td>Firefox</td>
+            <td>SQL Injection — Error Assertion Not Triggered</td>
+            <td><span class="badge badge-fail">Highest</span></td>
+            <td><span class="badge badge-warn">Open</span></td>
+          </tr>
+          <tr>
+            <td><code>KAN-14</code></td>
+            <td><span class="badge badge-fail">Bug</span></td>
+            <td>TC113</td>
+            <td>WebKit</td>
+            <td>SQL Injection — Error Assertion Not Triggered</td>
+            <td><span class="badge badge-fail">Highest</span></td>
+            <td><span class="badge badge-warn">Open</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="rule-box pass" style="margin-top:20px;">
+      <div class="rule-icon">ℹ️</div>
+      <div>
+        <h4>Developer Note on KAN-9 to KAN-14</h4>
+        <p>These cards document a locator regex issue that was already fixed in the test code. The app itself behaved correctly — it blocked both invalid email and SQL injection input. No app code change is required. These are QA automation audit records only.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section class="section" id="stack">
+    <div class="section-header">
+      <div class="section-icon">⚙️</div>
+      <div class="section-title">
+        <h2>Technology Stack</h2>
+        <p>Every tool used and why</p>
+      </div>
+    </div>
+
+    <div class="grid-3" style="gap:14px;">
+      <div class="tech-card">
+        <div class="tech-icon">🎭</div>
+        <h4>Playwright</h4>
+        <p>Browser automation — clicks, fills, assertions, screenshots, multi-browser. Version 1.60+</p>
+        <span class="badge badge-purple">Core</span>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">📘</div>
+        <h4>TypeScript</h4>
+        <p>Type-safe test code. Node16 modules. Strict mode enabled. Catches errors at compile time.</p>
+        <span class="badge badge-info">Language</span>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🟢</div>
+        <h4>Node.js</h4>
+        <p>JavaScript runtime. All scripts run via Node. tsx used for direct TS execution.</p>
+        <span class="badge badge-pass">Runtime</span>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🔐</div>
+        <h4>dotenv</h4>
+        <p>Loads .env file into process.env. Keeps credentials out of source code completely.</p>
+        <span class="badge badge-warn">Security</span>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">📡</div>
+        <h4>axios</h4>
+        <p>HTTP client for Jira REST API calls. Used in jiraHelper.ts for POST /issue and POST /search/jql.</p>
+        <span class="badge badge-info">HTTP</span>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🐛</div>
+        <h4>Jira Cloud REST API v3</h4>
+        <p>Creates bugs, checks duplicates, creates summary tasks. Uses Basic Auth with API token.</p>
+        <span class="badge badge-fail">Integration</span>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">📝</div>
+        <h4>ADF</h4>
+        <p>Atlassian Document Format — rich text format for Jira descriptions. Supports headings, lists, code blocks.</p>
+        <span class="badge badge-teal">Format</span>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🎨</div>
+        <h4>Vuetify (App UI)</h4>
+        <p>The app under test uses Vuetify. Selectors use .v-avatar, .v-navigation-drawer class names.</p>
+        <span class="badge badge-purple">App</span>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">⚡</div>
+        <h4>tsx</h4>
+        <p>Runs TypeScript files directly without compiling first. Used for one-off scripts like createBugCards.ts.</p>
+        <span class="badge badge-pass">Tooling</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>
+      <strong>SnapMeasure QA Framework</strong> — Playwright + TypeScript + Jira
+    </div>
+    <div style="text-align:right;">
+      <div>Project: <strong>KAN</strong> · Environment: <strong>measurement-dashboard-dev.magicktech.com</strong></div>
+      <div style="margin-top:4px; color:var(--text-muted);">Generated: 2026-05-20 · Tests: 54/54 Passing</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Active nav link on scroll
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + entry.target.id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

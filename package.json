@@ -1,19 +1,26 @@
 {
   "name": "my-qa-framework",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Playwright E2E QA framework for SnapMeasure dashboard",
   "scripts": {
     "test": "npx playwright test",
     "test:headed": "npx playwright test --headed",
     "test:ui": "npx playwright test --ui",
-    "test:report": "npx playwright show-report"
+    "test:report": "npx playwright show-report",
+    "test:grep": "npx playwright test --grep",
+    "test:debug": "npx playwright test --debug",
+    "test:chromium": "npx playwright test --project=chromium"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
-    "@types/node": "^25.8.0"
+    "@types/node": "^25.8.0",
+    "dotenv": "^17.4.2",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "axios": "^1.16.1"
   }
 }
